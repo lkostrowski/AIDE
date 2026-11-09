@@ -125,6 +125,8 @@ import * as ThreadMessageIntake from "./orchestration-v2/ThreadMessageIntake.ts"
 import * as DocumentText from "./provider/DocumentText.ts";
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import * as ScheduledTasks from "./scheduledTasks/ScheduledTaskService.ts";
+import * as WorkTracking from "./workTracking/WorkTrackingService.ts";
+import * as TicketLaunch from "./workTracking/TicketLaunchService.ts";
 import * as SecretRequests from "./secrets/SecretRequests.ts";
 import * as GuestShareService from "./guest/GuestShareService.ts";
 import {
@@ -1438,6 +1440,8 @@ export const layerWsRpc = (
       const commandOutputHub = yield* CommandOutputHub.CommandOutputHub;
       const providerSessionManager = yield* ProviderSessionManager.ProviderSessionManagerV2;
       const scheduledTasks = yield* ScheduledTasks.ScheduledTaskService;
+      const workTracking = yield* WorkTracking.WorkTrackingService;
+      const ticketLaunch = yield* TicketLaunch.TicketLaunchService;
       const secretRequests = yield* SecretRequests.SecretRequests;
       const guestShares = yield* GuestShareService.GuestShareService;
       const pullRequests = yield* PullRequestService.PullRequestService;
@@ -2361,6 +2365,40 @@ export const layerWsRpc = (
         [WS_METHODS.scheduledTasksGetWebhookDelivery]: (input) =>
           Effect.annotateCurrentSpan({ "scheduled_task.id": input.id }).pipe(
             Effect.andThen(scheduledTasks.getWebhookDelivery(input)),
+          ),
+        [WS_METHODS.workTrackingSubscribeBoard]: (_input) => workTracking.subscribeBoard(),
+        [WS_METHODS.workTrackingListInitiatives]: (_input) => workTracking.listInitiatives(),
+        [WS_METHODS.workTrackingUpsertInitiative]: (input) => workTracking.upsertInitiative(input),
+        [WS_METHODS.workTrackingDeleteInitiative]: (input) =>
+          Effect.annotateCurrentSpan({ "initiative.id": input.id }).pipe(
+            Effect.andThen(workTracking.deleteInitiative(input)),
+          ),
+        [WS_METHODS.workTrackingListTickets]: (input) => workTracking.listTickets(input),
+        [WS_METHODS.workTrackingUpsertTicket]: (input) => workTracking.upsertTicket(input),
+        [WS_METHODS.workTrackingDeleteTicket]: (input) =>
+          Effect.annotateCurrentSpan({ "ticket.id": input.id }).pipe(
+            Effect.andThen(workTracking.deleteTicket(input)),
+          ),
+        [WS_METHODS.workTrackingLinkTicketThread]: (input) =>
+          Effect.annotateCurrentSpan({ "ticket.id": input.ticketId }).pipe(
+            Effect.andThen(workTracking.linkTicketThread(input)),
+          ),
+        [WS_METHODS.workTrackingUnlinkTicketThread]: (input) =>
+          Effect.annotateCurrentSpan({ "ticket.id": input.ticketId }).pipe(
+            Effect.andThen(workTracking.unlinkTicketThread(input)),
+          ),
+        [WS_METHODS.workTrackingStartTicket]: (input) =>
+          Effect.annotateCurrentSpan({ "ticket.id": input.ticketId }).pipe(
+            Effect.andThen(ticketLaunch.startTicket(input)),
+          ),
+        [WS_METHODS.workTrackingListArtifacts]: (input) => workTracking.listArtifacts(input),
+        [WS_METHODS.workTrackingWriteArtifact]: (input) =>
+          Effect.annotateCurrentSpan({ "initiative.id": input.initiativeId }).pipe(
+            Effect.andThen(workTracking.writeArtifact(input)),
+          ),
+        [WS_METHODS.workTrackingDeleteArtifact]: (input) =>
+          Effect.annotateCurrentSpan({ "artifact.id": input.id }).pipe(
+            Effect.andThen(workTracking.deleteArtifact(input)),
           ),
         [WS_METHODS.serverProbe]: (_input) => Effect.succeed({}),
         [WS_METHODS.serverGetConfig]: (_input) =>

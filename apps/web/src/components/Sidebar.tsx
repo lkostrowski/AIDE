@@ -55,6 +55,7 @@ import {
 } from "@t3tools/client-runtime/environment";
 import {
   AuthOrchestrationOperateScope,
+  type InitiativeId,
   ProjectId,
   type ScopedThreadRef,
   type ThreadId,
@@ -180,8 +181,10 @@ import {
 import {
   applySidebarThreadDrop,
   filterSidebarV2VisibleThreads,
+  groupSidebarThreadsByInitiative,
   groupSidebarThreadsByProject,
   sidebarFolderExpansionKeys,
+  sidebarInitiativeRowId,
   buildBulkTitleRegenerationContextMenuItem,
   buildBulkUnpinContextMenuItem,
   deleteSelectedThreadEntries,
@@ -271,6 +274,11 @@ import {
   SidebarSectionHeader,
   SidebarSectionPlaceholder,
 } from "./sidebar/SidebarListMarkers";
+import {
+  SidebarInitiativeFolderHeader,
+  SidebarInitiativesHeader,
+} from "./sidebar/SidebarInitiatives";
+import { useWorkTrackingBoard, type SidebarWorkBoard } from "../state/workTracking";
 
 function sameSidebarProviderEntries(
   left: ReadonlyMap<string, SidebarProviderEntry>,
@@ -423,6 +431,7 @@ function useSidebarThreads(input: {
   readonly folderGroups: readonly SidebarProjectSnapshot[] | null;
   // Keeps folders with no active threads, so a project the user filtered to or pinned can start one.
   readonly keepEmptyFolders: (group: SidebarProjectSnapshot) => boolean;
+  readonly initiativeBoard: SidebarWorkBoard | null;
 }) {
   const {
     projectScopeKey,
@@ -435,6 +444,7 @@ function useSidebarThreads(input: {
     routeRowThreadKey,
     folderGroups,
     keepEmptyFolders: keepEmpty,
+    initiativeBoard,
   } = input;
   // Folders already separate the work, so boring mode has no Working shelf.
   const workingShelfEnabled =
@@ -520,30 +530,55 @@ function useSidebarThreads(input: {
   const visibleWorkingThreads = workingShelfExpanded
     ? workingThreads
     : routeThreadOnly(workingThreads, routeRowThreadKey);
+  const initiativeGroups = groupSidebarThreadsByInitiative(initiativeBoard, activeThreads);
+  const initiativeFolders = initiativeGroups.map((folder) => {
+    const collapsed = !resolveProjectExpanded(projectExpandedById, [
+      sidebarInitiativeRowId(folder.initiative.id),
+    ]);
+    return {
+      initiative: folder.initiative,
+      collapsed,
+      // A closed folder still shows the open thread, and hints at the rest.
+      threads: collapsed ? routeThreadOnly(folder.threads, routeRowThreadKey) : folder.threads,
+      hiddenThreadCount: collapsed
+        ? folder.threads.filter((thread) => threadShellKey(thread) !== routeRowThreadKey).length
+        : 0,
+    };
+  });
+  const initiativeThreadKeys = new Set(
+    initiativeGroups.flatMap((folder) => folder.threads.map(threadShellKey)),
+  );
+  const ungroupedActiveThreads =
+    initiativeThreadKeys.size === 0
+      ? activeThreads
+      : activeThreads.filter((thread) => !initiativeThreadKeys.has(threadShellKey(thread)));
   const projectFolders =
     folderGroups === null
       ? null
-      : groupSidebarThreadsByProject(folderGroups, activeThreads, keepEmpty).map((folder) => {
-          const collapsed = !resolveProjectExpanded(
-            projectExpandedById,
-            sidebarFolderExpansionKeys(folder.group),
-          );
-          return {
-            group: folder.group,
-            collapsed,
-            // A closed folder still shows the open thread, and hints at the rest.
-            threads: collapsed
-              ? routeThreadOnly(folder.threads, routeRowThreadKey)
-              : folder.threads,
-            hiddenThreads: collapsed
-              ? folder.threads.filter((thread) => threadShellKey(thread) !== routeRowThreadKey)
-              : EMPTY_THREADS,
-          };
-        });
+      : groupSidebarThreadsByProject(folderGroups, ungroupedActiveThreads, keepEmpty).map(
+          (folder) => {
+            const collapsed = !resolveProjectExpanded(
+              projectExpandedById,
+              sidebarFolderExpansionKeys(folder.group),
+            );
+            return {
+              group: folder.group,
+              collapsed,
+              // A closed folder still shows the open thread, and hints at the rest.
+              threads: collapsed
+                ? routeThreadOnly(folder.threads, routeRowThreadKey)
+                : folder.threads,
+              hiddenThreads: collapsed
+                ? folder.threads.filter((thread) => threadShellKey(thread) !== routeRowThreadKey)
+                : EMPTY_THREADS,
+            };
+          },
+        );
   const orderedThreads = [
+    ...initiativeFolders.flatMap((folder) => folder.threads),
     ...pinnedThreads,
     ...(projectFolders === null
-      ? activeThreads
+      ? ungroupedActiveThreads
       : projectFolders.flatMap((folder) => folder.threads)),
     ...visibleWorkingThreads,
     ...visibleSnoozedThreads,
@@ -585,6 +620,12 @@ function useSidebarThreads(input: {
     toggleSnoozedShelf: () => setSnoozedShelfExpanded((value) => !value),
     workingShelfExpanded,
     toggleWorkingShelf: () => setWorkingShelfExpanded((value) => !value),
+    initiativeFolders,
+    initiativeThreadKeys,
+    toggleInitiativeFolder: (initiative: { readonly id: string }) => {
+      const key = sidebarInitiativeRowId(initiative.id);
+      setProjectExpanded([key], !resolveProjectExpanded(projectExpandedById, [key]));
+    },
     projectFolders,
     toggleProjectFolder: (group: SidebarProjectSnapshot) => {
       const keys = sidebarFolderExpansionKeys(group);
@@ -990,6 +1031,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     },
   });
   const boringSidebarEnabled = useBoringSidebarEnabled();
+  const initiativeBoard = useWorkTrackingBoard();
   const legacySidebarEnabled = useClientSettings((settings) => settings.legacySidebarEnabled);
   const folderRowsMultiline = useClientSettings((settings) => settings.boringSidebarMultilineRows);
   const newThreadContext = useHandleNewThread();
@@ -1313,6 +1355,9 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
     toggleSnoozedShelf,
     workingShelfExpanded,
     toggleWorkingShelf,
+    initiativeFolders,
+    initiativeThreadKeys,
+    toggleInitiativeFolder,
     projectFolders,
     toggleProjectFolder,
     renderedSettledThreads,
@@ -1344,6 +1389,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       : null,
     keepEmptyFolders: (group) =>
       scopedProjectGroups.length > 0 || (group.pinned && !group.archived),
+    initiativeBoard,
   });
 
   // Ranked across environments as the palette ranks them, so one
@@ -1478,6 +1524,14 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
       setOpenMobile(false);
     }
     void router.navigate({ to: "/draft/$draftId", params: { draftId } });
+  };
+
+  const navigateToWorkBoard = (initiativeId?: InitiativeId) => {
+    if (isMobile) setOpenMobile(false);
+    void router.navigate({
+      to: "/work",
+      search: initiativeId === undefined ? {} : { initiative: initiativeId },
+    });
   };
 
   const clearThreadSearch = () => {
@@ -3343,6 +3397,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                             sortableId={threadKey}
                             contextDrag={isContextDrag}
                             sortableDisabled={
+                              folderRow !== undefined ||
                               projectFolders !== null ||
                               renamingThreadKey === threadKey ||
                               !draggableThreadKeys.has(threadKey) ||
@@ -3440,7 +3495,38 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                         );
                       };
                       const from = isContextDrag ? null : (dragState?.activeSection ?? null);
-                      const items: ReactNode[] = [
+                      const items: ReactNode[] = [];
+                      if (primaryEnvironmentId !== null) {
+                        items.push(
+                          <SidebarInitiativesHeader
+                            key="initiatives-header"
+                            count={initiativeFolders.length}
+                            onOpenBoard={() => navigateToWorkBoard()}
+                          />,
+                        );
+                        for (const folder of initiativeFolders) {
+                          items.push(
+                            <SidebarInitiativeFolderHeader
+                              key={`initiative:${folder.initiative.id}`}
+                              initiative={folder.initiative}
+                              collapsed={folder.collapsed}
+                              hiddenThreadCount={folder.hiddenThreadCount}
+                              onToggle={toggleInitiativeFolder}
+                              onOpenBoard={(initiative) => navigateToWorkBoard(initiative.id)}
+                            />,
+                          );
+                          for (const thread of folder.threads) {
+                            items.push(
+                              renderThreadRow(
+                                thread,
+                                "active",
+                                sidebarInitiativeRowId(folder.initiative.id),
+                              ),
+                            );
+                          }
+                        }
+                      }
+                      items.push(
                         <SidebarDraftBlock
                           key="draft-sessions"
                           projectByKey={projectByKey}
@@ -3450,10 +3536,11 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                           onNavigateToDraft={navigateToDraft}
                           onDraftContextMenu={handleDraftContextMenu}
                         />,
-                      ];
+                      );
                       for (const item of sidebarListItems) {
                         if (item.kind === "thread") {
                           // Folders draw active rows in their own place below.
+                          if (initiativeThreadKeys.has(item.key)) continue;
                           if (projectFolders !== null && item.section === "active") continue;
                           items.push(renderThreadRow(threadByKey.get(item.key)!, item.section));
                           continue;

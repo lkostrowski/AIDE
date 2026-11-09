@@ -65,6 +65,8 @@ import {
   PreviewSnapshotToolkit,
   PreviewStandardToolkit,
 } from "./toolkits/preview/tools.ts";
+import * as WorkTrackingHandlers from "./toolkits/workTracking/handlers.ts";
+import { WorkTrackingToolkit } from "./toolkits/workTracking/tools.ts";
 import * as WorktreeHandlers from "./toolkits/worktree/handlers.ts";
 import { WorktreeToolkit } from "./toolkits/worktree/tools.ts";
 import * as WorktreeMcpService from "./WorktreeMcpService.ts";
@@ -1182,6 +1184,11 @@ const layerEnvironmentToolkit = toolkitRegistration(
 
 export const layerProjectRegistration = toolkitRegistration(ProjectToolkit, ProjectHandlers.layer);
 
+const layerWorkTrackingToolkitRegistration = toolkitRegistration(
+  WorkTrackingToolkit,
+  WorkTrackingHandlers.layer,
+);
+
 export const layerAttachmentToolkit = toolkitRegistration(
   AttachmentToolkit,
   AttachmentHandlers.layer,
@@ -1246,6 +1253,7 @@ export const layerTools = Layer.mergeAll(
   layerEnvironmentToolkit,
   layerPreviewControlsRegistration,
   layerWorktreeToolkitRegistration,
+  layerWorkTrackingToolkitRegistration,
   layerPullRequestsToolkit,
   layerDeviceToolkit,
   layerHtmlToolkit,

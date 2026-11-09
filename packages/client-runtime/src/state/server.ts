@@ -1334,6 +1334,10 @@ export function createServerEnvironmentAtoms<R, E>(
       label: "environment-data:server:scheduled-tasks:live",
       tag: WS_METHODS.scheduledTasksSubscribe,
     }),
+    workTrackingBoardLive: createEnvironmentRpcSubscriptionAtomFamily(runtime, {
+      label: "environment-data:work-tracking:board:live",
+      tag: WS_METHODS.workTrackingSubscribeBoard,
+    }),
     // A cold transcript scan is measured in seconds, so keep the result around
     // long enough that switching windows or re-rendering does not rescan.
     usageSummary: createEnvironmentRpcQueryAtomFamily(runtime, {
@@ -1581,6 +1585,48 @@ export function createServerEnvironmentAtoms<R, E>(
       tag: WS_METHODS.scheduledTasksRotateWebhookToken,
       scheduler: configScheduler,
       concurrency: configConcurrency,
+    }),
+    upsertInitiative: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:upsert-initiative",
+      tag: WS_METHODS.workTrackingUpsertInitiative,
+    }),
+    deleteInitiative: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:delete-initiative",
+      tag: WS_METHODS.workTrackingDeleteInitiative,
+    }),
+    upsertTicket: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:upsert-ticket",
+      tag: WS_METHODS.workTrackingUpsertTicket,
+    }),
+    deleteTicket: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:delete-ticket",
+      tag: WS_METHODS.workTrackingDeleteTicket,
+    }),
+    linkTicketThread: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:link-ticket-thread",
+      tag: WS_METHODS.workTrackingLinkTicketThread,
+    }),
+    unlinkTicketThread: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:unlink-ticket-thread",
+      tag: WS_METHODS.workTrackingUnlinkTicketThread,
+    }),
+    // Off any shared lane: starting a ticket provisions a worktree and runs a
+    // setup script, so it must not stall other board edits queued behind it.
+    startTicket: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:start-ticket",
+      tag: WS_METHODS.workTrackingStartTicket,
+      concurrency: {
+        mode: "singleFlight",
+        key: ({ environmentId, input }) => `${environmentId}:${input.ticketId}`,
+      },
+    }),
+    writeArtifact: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:write-artifact",
+      tag: WS_METHODS.workTrackingWriteArtifact,
+    }),
+    deleteArtifact: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:work-tracking:delete-artifact",
+      tag: WS_METHODS.workTrackingDeleteArtifact,
     }),
     createGuestShare: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:server:guest-share:create",

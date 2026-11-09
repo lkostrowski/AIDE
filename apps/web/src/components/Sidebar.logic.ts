@@ -966,6 +966,52 @@ export function groupSidebarThreadsByProject<
   return folders.filter((folder) => folder.threads.length > 0 || keepEmpty(folder.group));
 }
 
+/** The sidebar tree row and folder-expansion key of an Initiative's folder. */
+export function sidebarInitiativeRowId(initiativeId: string) {
+  return `initiative:${initiativeId}`;
+}
+
+/**
+ * Initiative folders. Every Initiative keeps a folder, so the section doubles as
+ * the board's navigation. Folders follow `initiatives` order, threads keep their
+ * input order, and a Thread linked from two Initiatives lands in the first
+ * Ticket that claims it.
+ */
+export function groupSidebarThreadsByInitiative<
+  TInitiative extends { readonly id: string },
+  TThread extends Pick<SidebarThreadSummary, "environmentId" | "id">,
+>(
+  board: {
+    readonly environmentId: EnvironmentId;
+    readonly initiatives: readonly TInitiative[];
+    readonly tickets: ReadonlyArray<{
+      readonly initiativeId: string;
+      readonly threadIds: readonly string[];
+    }>;
+  } | null,
+  threads: readonly TThread[],
+): Array<{ initiative: TInitiative; threads: TThread[] }> {
+  if (board === null) return [];
+  const folders = board.initiatives.map((initiative) => ({
+    initiative,
+    threads: [] as TThread[],
+  }));
+  const folderByInitiativeId = new Map(folders.map((folder) => [folder.initiative.id, folder]));
+  const folderByThreadId = new Map<string, (typeof folders)[number]>();
+  for (const ticket of board.tickets) {
+    const folder = folderByInitiativeId.get(ticket.initiativeId);
+    if (folder === undefined) continue;
+    for (const threadId of ticket.threadIds) {
+      if (!folderByThreadId.has(threadId)) folderByThreadId.set(threadId, folder);
+    }
+  }
+  for (const thread of threads) {
+    if (thread.environmentId !== board.environmentId) continue;
+    folderByThreadId.get(thread.id)?.threads.push(thread);
+  }
+  return folders;
+}
+
 export type SidebarV2TopStatusKind =
   | "approval"
   | "done"

@@ -63,6 +63,17 @@ export const CLIENT_GUARDED_RPC_SCOPES = {
   [WS_METHODS.scheduledTasksDelete]: AuthOrchestrationOperateScope,
   [WS_METHODS.scheduledTasksRunNow]: AuthOrchestrationOperateScope,
   [WS_METHODS.scheduledTasksRotateWebhookToken]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingUpsertInitiative]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingDeleteInitiative]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingUpsertTicket]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingDeleteTicket]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingLinkTicketThread]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingUnlinkTicketThread]: AuthOrchestrationOperateScope,
+  // Starting a Ticket creates a worktree and runs an agent in it.
+  [WS_METHODS.workTrackingStartTicket]: AuthOrchestrationOperateScope,
+  // Writing an Artifact writes a file into the Initiative's directory on this environment.
+  [WS_METHODS.workTrackingWriteArtifact]: AuthOrchestrationOperateScope,
+  [WS_METHODS.workTrackingDeleteArtifact]: AuthOrchestrationOperateScope,
   [ORCHESTRATION_V2_WS_METHODS.stopWorkflow]: AuthOrchestrationOperateScope,
   // Force stop kills agent processes, as Stop on a terminal does.
   [ORCHESTRATION_V2_WS_METHODS.forceStopThread]: AuthOrchestrationOperateScope,

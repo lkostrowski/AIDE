@@ -378,6 +378,30 @@ import {
   ScheduledTaskUpsertInput,
   ScheduledTaskMutationResult,
 } from "./scheduledTask.ts";
+import {
+  ArtifactDeleteInput,
+  ArtifactListInput,
+  ArtifactListResult,
+  ArtifactMutationResult,
+  ArtifactWriteInput,
+  InitiativeDeleteInput,
+  InitiativeListInput,
+  InitiativeListResult,
+  InitiativeMutationResult,
+  InitiativeUpsertInput,
+  TicketDeleteInput,
+  TicketListInput,
+  TicketListResult,
+  TicketMutationResult,
+  TicketStartInput,
+  TicketStartResult,
+  TicketThreadInput,
+  TicketUpsertInput,
+  WorkTrackingBoard,
+  WorkTrackingBoardInput,
+  WorkTrackingDeleteResult,
+  WorkTrackingError,
+} from "./workTracking.ts";
 import { SecretRequestAnswerInput, SecretRequestError } from "./secretRequest.ts";
 import {
   ProjectCloneActionInput,
@@ -551,6 +575,20 @@ export const WS_METHODS = {
   guestShareCreate: "guestShare.create",
   scheduledTasksListWebhookDeliveries: "scheduledTasks.listWebhookDeliveries",
   scheduledTasksGetWebhookDelivery: "scheduledTasks.getWebhookDelivery",
+
+  workTrackingSubscribeBoard: "workTracking.subscribeBoard",
+  workTrackingListInitiatives: "workTracking.listInitiatives",
+  workTrackingUpsertInitiative: "workTracking.upsertInitiative",
+  workTrackingDeleteInitiative: "workTracking.deleteInitiative",
+  workTrackingListTickets: "workTracking.listTickets",
+  workTrackingUpsertTicket: "workTracking.upsertTicket",
+  workTrackingDeleteTicket: "workTracking.deleteTicket",
+  workTrackingLinkTicketThread: "workTracking.linkTicketThread",
+  workTrackingUnlinkTicketThread: "workTracking.unlinkTicketThread",
+  workTrackingStartTicket: "workTracking.startTicket",
+  workTrackingListArtifacts: "workTracking.listArtifacts",
+  workTrackingWriteArtifact: "workTracking.writeArtifact",
+  workTrackingDeleteArtifact: "workTracking.deleteArtifact",
 
   cloudGetRelayClientStatus: "cloud.getRelayClientStatus",
   cloudInstallRelayClient: "cloud.installRelayClient",
@@ -1988,6 +2026,87 @@ const WsScheduledTasksGetWebhookDeliveryRpc = Rpc.make(
   },
 );
 
+const workTrackingError = Schema.Union([WorkTrackingError, EnvironmentAuthorizationError]);
+
+const WsWorkTrackingSubscribeBoardRpc = Rpc.make(WS_METHODS.workTrackingSubscribeBoard, {
+  payload: WorkTrackingBoardInput,
+  success: WorkTrackingBoard,
+  error: workTrackingError,
+  stream: true,
+});
+
+const WsWorkTrackingListInitiativesRpc = Rpc.make(WS_METHODS.workTrackingListInitiatives, {
+  payload: InitiativeListInput,
+  success: InitiativeListResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingUpsertInitiativeRpc = Rpc.make(WS_METHODS.workTrackingUpsertInitiative, {
+  payload: InitiativeUpsertInput,
+  success: InitiativeMutationResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingDeleteInitiativeRpc = Rpc.make(WS_METHODS.workTrackingDeleteInitiative, {
+  payload: InitiativeDeleteInput,
+  success: WorkTrackingDeleteResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingListTicketsRpc = Rpc.make(WS_METHODS.workTrackingListTickets, {
+  payload: TicketListInput,
+  success: TicketListResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingUpsertTicketRpc = Rpc.make(WS_METHODS.workTrackingUpsertTicket, {
+  payload: TicketUpsertInput,
+  success: TicketMutationResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingDeleteTicketRpc = Rpc.make(WS_METHODS.workTrackingDeleteTicket, {
+  payload: TicketDeleteInput,
+  success: WorkTrackingDeleteResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingLinkTicketThreadRpc = Rpc.make(WS_METHODS.workTrackingLinkTicketThread, {
+  payload: TicketThreadInput,
+  success: TicketMutationResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingUnlinkTicketThreadRpc = Rpc.make(WS_METHODS.workTrackingUnlinkTicketThread, {
+  payload: TicketThreadInput,
+  success: TicketMutationResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingStartTicketRpc = Rpc.make(WS_METHODS.workTrackingStartTicket, {
+  payload: TicketStartInput,
+  success: TicketStartResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingListArtifactsRpc = Rpc.make(WS_METHODS.workTrackingListArtifacts, {
+  payload: ArtifactListInput,
+  success: ArtifactListResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingWriteArtifactRpc = Rpc.make(WS_METHODS.workTrackingWriteArtifact, {
+  payload: ArtifactWriteInput,
+  success: ArtifactMutationResult,
+  error: workTrackingError,
+});
+
+const WsWorkTrackingDeleteArtifactRpc = Rpc.make(WS_METHODS.workTrackingDeleteArtifact, {
+  payload: ArtifactDeleteInput,
+  success: WorkTrackingDeleteResult,
+  error: workTrackingError,
+});
+
 const WsSubscribeAuthAccessRpc = Rpc.make(WS_METHODS.subscribeAuthAccess, {
   payload: Schema.Struct({}),
   success: AuthAccessStreamEvent,
@@ -2074,6 +2193,19 @@ export const WsRpcGroup = RpcGroup.make(
   WsSecretsAnswerRequestRpc,
   WsScheduledTasksListWebhookDeliveriesRpc,
   WsScheduledTasksGetWebhookDeliveryRpc,
+  WsWorkTrackingSubscribeBoardRpc,
+  WsWorkTrackingListInitiativesRpc,
+  WsWorkTrackingUpsertInitiativeRpc,
+  WsWorkTrackingDeleteInitiativeRpc,
+  WsWorkTrackingListTicketsRpc,
+  WsWorkTrackingUpsertTicketRpc,
+  WsWorkTrackingDeleteTicketRpc,
+  WsWorkTrackingLinkTicketThreadRpc,
+  WsWorkTrackingUnlinkTicketThreadRpc,
+  WsWorkTrackingStartTicketRpc,
+  WsWorkTrackingListArtifactsRpc,
+  WsWorkTrackingWriteArtifactRpc,
+  WsWorkTrackingDeleteArtifactRpc,
   WsServerReportClientActivityRpc,
   WsCloudGetRelayClientStatusRpc,
   WsCloudInstallRelayClientRpc,

@@ -31,6 +31,7 @@ import {
   type SidebarListMarker,
   type SidebarSection,
   resolveSidebarDropVerb,
+  groupSidebarThreadsByInitiative,
   groupSidebarThreadsByProject,
   resolveSidebarFolderDot,
   sidebarFolderExpansionKeys,
@@ -1580,6 +1581,46 @@ describe("groupSidebarThreadsByProject", () => {
       { projectKey: "t3code", threads: ["a", "b"] },
       { projectKey: "fleet", threads: [] },
     ]);
+  });
+});
+
+describe("groupSidebarThreadsByInitiative", () => {
+  it("keeps every initiative, claims a thread once, and ignores other environments", () => {
+    const remoteEnvironmentId = EnvironmentId.make("environment-remote");
+    const thread = (id: string, environmentId: EnvironmentId) => ({
+      id: ThreadId.make(id),
+      environmentId,
+    });
+    const board = {
+      environmentId: localEnvironmentId,
+      initiatives: [{ id: "search" }, { id: "billing" }, { id: "idle" }],
+      tickets: [
+        { initiativeId: "search", threadIds: ["a", "shared"] },
+        { initiativeId: "billing", threadIds: ["shared", "b"] },
+        { initiativeId: "deleted", threadIds: ["c"] },
+      ],
+    };
+    const folders = groupSidebarThreadsByInitiative(board, [
+      thread("b", localEnvironmentId),
+      thread("a", localEnvironmentId),
+      thread("shared", localEnvironmentId),
+      thread("c", localEnvironmentId),
+      thread("loose", localEnvironmentId),
+      // Same thread id on another environment; its board is a different one.
+      thread("a", remoteEnvironmentId),
+    ]);
+
+    expect(
+      folders.map((folder) => ({
+        id: folder.initiative.id,
+        threads: folder.threads.map((entry) => entry.id),
+      })),
+    ).toEqual([
+      { id: "search", threads: ["a", "shared"] },
+      { id: "billing", threads: ["b"] },
+      { id: "idle", threads: [] },
+    ]);
+    expect(groupSidebarThreadsByInitiative(null, [thread("a", localEnvironmentId)])).toEqual([]);
   });
 });
 
