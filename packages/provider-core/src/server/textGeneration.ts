@@ -107,6 +107,21 @@ export interface TranscriptionPostProcessingResult {
   transcription: string;
 }
 
+export interface TicketContentGenerationInput {
+  cwd: string;
+  todoText: string;
+  todoTags: ReadonlyArray<string>;
+  threadTitle: string;
+  projectName: string;
+  transcriptExcerpt: string;
+  modelSelection: ModelSelection;
+}
+
+export interface TicketContentGenerationResult {
+  title: string;
+  description: string;
+}
+
 export interface ProviderTextGeneration {
   readonly generateTranscriptionPostProcessing: (
     input: TranscriptionPostProcessingInput,
@@ -131,4 +146,8 @@ export interface ProviderTextGeneration {
   readonly generateReviewGuide: (
     input: ReviewGuideGenerationInput,
   ) => Effect.Effect<ReviewGuideGenerationResult, TextGenerationError>;
+
+  readonly generateTicketContent: (
+    input: TicketContentGenerationInput,
+  ) => Effect.Effect<TicketContentGenerationResult, TextGenerationError>;
 }

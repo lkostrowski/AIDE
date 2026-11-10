@@ -1,6 +1,12 @@
-import { OrchestratorMcpFailure, type WorkTrackingError } from "@t3tools/contracts";
+import {
+  OrchestratorMcpFailure,
+  type ThreadTodoError,
+  type ThreadTodoWriteRow,
+  type WorkTrackingError,
+} from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 
+import * as ThreadTodos from "../../../threadTodos/ThreadTodoService.ts";
 import * as TicketLaunch from "../../../workTracking/TicketLaunchService.ts";
 import * as WorkTracking from "../../../workTracking/WorkTrackingService.ts";
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
@@ -8,7 +14,7 @@ import * as McpToolAccess from "../../McpToolAccess.ts";
 import { WorkTrackingToolkit } from "./tools.ts";
 
 /** Every failure here is a rejected request, not an outage: the store is local. */
-function failure(error: WorkTrackingError) {
+function failure(error: WorkTrackingError | ThreadTodoError) {
   return new OrchestratorMcpFailure({ code: "invalid_request", message: error.message });
 }
 
@@ -84,5 +90,23 @@ export const layer = McpToolAccess.toLayer(WorkTrackingToolkit, {
   ),
   t3_artifact_delete: writes((input) =>
     service.pipe(Effect.flatMap((work) => work.deleteArtifact(input))),
+  ),
+  t3_todo_write: McpToolAccess.writes(
+    (input: { readonly todos: ReadonlyArray<ThreadTodoWriteRow> }) =>
+      Effect.gen(function* () {
+        const scope = yield* McpInvocationContext.McpInvocationContext;
+        const threadId = scope.thread?.threadId;
+        if (threadId === undefined) {
+          return yield* new OrchestratorMcpFailure({
+            code: "invalid_request",
+            message: "Todos belong to a thread, and this call came from outside one.",
+          });
+        }
+        const todos = yield* ThreadTodos.ThreadTodoService;
+        return yield* todos
+          .write({ threadId, todos: input.todos }, { createdBy: "agent", creationSource: "mcp" })
+          .pipe(Effect.mapError(failure));
+      }),
+    { subject: "change this thread's todos" },
   ),
 });

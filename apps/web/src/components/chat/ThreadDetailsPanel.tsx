@@ -23,6 +23,7 @@ import { ThreadDetailsSection } from "./ThreadDetailsSection";
 import { ThreadAutomationsPanel } from "./ThreadAutomationsPanel";
 import { ThreadRelationshipsPanel } from "./ThreadRelationshipsControl";
 import { ThreadServersPanel } from "./ThreadServersPanel";
+import { ThreadTodosPanel } from "./ThreadTodosPanel";
 import {
   ThreadDetailsContext,
   ThreadDetailsUsage,
@@ -246,6 +247,15 @@ export function ThreadDetailsPanel(props: ThreadDetailsPanelProps) {
                 <ThreadAutomationsPanel
                   environmentId={props.environmentId}
                   threadId={props.threadId}
+                />
+              ) : null}
+
+              {!props.draftId && visible.todos ? (
+                <ThreadTodosPanel
+                  environmentId={props.environmentId}
+                  threadId={props.threadId}
+                  projectId={props.projectId}
+                  density={density}
                 />
               ) : null}
 

@@ -97,6 +97,8 @@ import * as ReviewService from "./review/ReviewService.ts";
 import * as ScheduledTasks from "./scheduledTasks/ScheduledTaskService.ts";
 import * as WorkTracking from "./workTracking/WorkTrackingService.ts";
 import * as TicketLaunch from "./workTracking/TicketLaunchService.ts";
+import * as ThreadTodos from "./threadTodos/ThreadTodoService.ts";
+import * as ThreadTodoTickets from "./threadTodos/ThreadTodoTicketService.ts";
 import * as SecretRequests from "./secrets/SecretRequests.ts";
 import * as GuestShareService from "./guest/GuestShareService.ts";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
@@ -820,6 +822,8 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(ScheduledTasks.ScheduledTaskService)({}),
   Layer.mock(WorkTracking.WorkTrackingService)({}),
   Layer.mock(TicketLaunch.TicketLaunchService)({}),
+  Layer.mock(ThreadTodos.ThreadTodoService)({}),
+  Layer.mock(ThreadTodoTickets.ThreadTodoTicketService)({}),
   Layer.mock(SecretRequests.SecretRequests)({}),
   Layer.mock(SecretResolver.SecretResolver)({}),
   Layer.mock(GuestShareService.GuestShareService)({}),

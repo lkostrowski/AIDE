@@ -318,6 +318,8 @@ export const TicketId = makeEntityId("TicketId");
 export type TicketId = typeof TicketId.Type;
 export const ArtifactId = makeEntityId("ArtifactId");
 export type ArtifactId = typeof ArtifactId.Type;
+export const ThreadTodoId = makeEntityId("ThreadTodoId");
+export type ThreadTodoId = typeof ThreadTodoId.Type;
 export const ScheduledTaskId = makeEntityId("ScheduledTaskId");
 /** A one-use handle to a secret the user entered for an agent; the agent never sees the value. */
 export const SecretRef = makeEntityId("SecretRef");

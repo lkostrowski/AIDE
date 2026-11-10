@@ -57,6 +57,8 @@ import * as ThreadForkService from "./ThreadForkService.ts";
 import * as TurnItemPositionStore from "./TurnItemPositionStore.ts";
 import * as ScheduledTaskService from "../scheduledTasks/ScheduledTaskService.ts";
 import * as SecretRequests from "../secrets/SecretRequests.ts";
+import * as ThreadTodoService from "../threadTodos/ThreadTodoService.ts";
+import * as ThreadTodoTicketService from "../threadTodos/ThreadTodoTicketService.ts";
 import * as WorkTrackingService from "../workTracking/WorkTrackingService.ts";
 import * as TicketLaunchService from "../workTracking/TicketLaunchService.ts";
 
@@ -175,6 +177,7 @@ const layerProviderTurnStartServiceProvided = ProviderTurnStartService.layer.pip
       layerProviderAuthServiceProvided,
       layerRunExecutionServiceProvided,
       layerRuntimePolicyProvided,
+      ThreadTodoService.layer,
     ),
   ),
 );
@@ -380,6 +383,17 @@ export const layerProduction = Layer.mergeAll(
   layerThreadLaunchProvided,
   layerScheduledTaskProvided,
   WorkTrackingService.layer,
+  ThreadTodoService.layer,
+  ThreadTodoTicketService.layer.pipe(
+    Layer.provide(
+      Layer.mergeAll(
+        ThreadTodoService.layer,
+        WorkTrackingService.layer,
+        ProjectionStore.layer,
+        layerProjectService,
+      ),
+    ),
+  ),
   TicketLaunchService.layer.pipe(
     Layer.provide(
       Layer.mergeAll(WorkTrackingService.layer, layerThreadLaunchProvided, layerProjectService),

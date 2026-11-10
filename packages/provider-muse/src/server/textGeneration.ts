@@ -31,6 +31,7 @@ import {
   buildCommitMessagePrompt,
   buildPrContentPrompt,
   buildThreadTitlePrompt,
+  buildTicketContentPrompt,
 } from "@t3tools/provider-core/server/textGenerationPrompts";
 import {
   sanitizeCommitSubject,
@@ -361,12 +362,23 @@ export const makeMuseTextGeneration = Effect.fn("makeMuseTextGeneration")(functi
     });
   const generateReviewGuide: ProviderTextGeneration["generateReviewGuide"] = () =>
     Effect.fail(investigationUnsupported("generateReviewGuide", "Muse Code"));
+  const generateTicketContent: ProviderTextGeneration["generateTicketContent"] = Effect.fn(
+    "MuseTextGeneration.generateTicketContent",
+  )(function* (input) {
+    const generated = yield* runMuseJson({
+      operation: "generateTicketContent",
+      ...buildTicketContentPrompt(input),
+      modelSelection: input.modelSelection,
+    });
+    return { title: sanitizePrTitle(generated.title), description: generated.description.trim() };
+  });
   return {
     generateCommitMessage,
     generatePrContent,
     generateBranchName,
     generateThreadTitle,
     generateReviewGuide,
+    generateTicketContent,
     generateTranscriptionPostProcessing,
   } satisfies ProviderTextGeneration;
 });

@@ -127,6 +127,11 @@ export const RPC_REQUIRED_SCOPES = {
   [WS_METHODS.workTrackingListArtifacts]: AuthOrchestrationReadScope,
   [WS_METHODS.workTrackingWriteArtifact]: AuthOrchestrationOperateScope,
   [WS_METHODS.workTrackingDeleteArtifact]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosSubscribe]: AuthOrchestrationReadScope,
+  [WS_METHODS.threadTodosAdd]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosSetState]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosDraftTicket]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosCreateTicket]: AuthOrchestrationOperateScope,
   [WS_METHODS.secretsAnswerRequest]: AuthOrchestrationOperateScope,
   // Delivery logs hold request bodies, so they need the same scope as the URL.
   [WS_METHODS.scheduledTasksListWebhookDeliveries]: AuthOrchestrationOperateScope,

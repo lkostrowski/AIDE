@@ -12,6 +12,7 @@ import {
   buildPrContentPrompt,
   buildReviewGuidePrompt,
   buildThreadTitlePrompt,
+  buildTicketContentPrompt,
 } from "./textGenerationPrompts.ts";
 import {
   sanitizeCommitSubject,
@@ -180,12 +181,25 @@ export function fromRunner(name: string, run: Runner): ProviderTextGeneration {
     });
   });
 
+  const generateTicketContent: ProviderTextGeneration["generateTicketContent"] = Effect.fn(
+    `${name}.generateTicketContent`,
+  )(function* (input) {
+    const generated = yield* run({
+      operation: "generateTicketContent",
+      cwd: input.cwd,
+      modelSelection: input.modelSelection,
+      ...buildTicketContentPrompt(input),
+    });
+    return { title: sanitizePrTitle(generated.title), description: generated.description.trim() };
+  });
+
   return {
     generateCommitMessage,
     generatePrContent,
     generateBranchName,
     generateThreadTitle,
     generateReviewGuide,
+    generateTicketContent,
     generateTranscriptionPostProcessing,
   } satisfies ProviderTextGeneration;
 }

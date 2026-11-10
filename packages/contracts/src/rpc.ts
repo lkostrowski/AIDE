@@ -402,6 +402,18 @@ import {
   WorkTrackingDeleteResult,
   WorkTrackingError,
 } from "./workTracking.ts";
+import {
+  ThreadTodoAddInput,
+  ThreadTodoCreateTicketInput,
+  ThreadTodoCreateTicketResult,
+  ThreadTodoDraftTicketInput,
+  ThreadTodoError,
+  ThreadTodoListInput,
+  ThreadTodoListResult,
+  ThreadTodoMutationResult,
+  ThreadTodoSetStateInput,
+  ThreadTodoTicketDraft,
+} from "./threadTodos.ts";
 import { SecretRequestAnswerInput, SecretRequestError } from "./secretRequest.ts";
 import {
   ProjectCloneActionInput,
@@ -589,6 +601,11 @@ export const WS_METHODS = {
   workTrackingListArtifacts: "workTracking.listArtifacts",
   workTrackingWriteArtifact: "workTracking.writeArtifact",
   workTrackingDeleteArtifact: "workTracking.deleteArtifact",
+  threadTodosSubscribe: "threadTodos.subscribe",
+  threadTodosAdd: "threadTodos.add",
+  threadTodosSetState: "threadTodos.setState",
+  threadTodosDraftTicket: "threadTodos.draftTicket",
+  threadTodosCreateTicket: "threadTodos.createTicket",
 
   cloudGetRelayClientStatus: "cloud.getRelayClientStatus",
   cloudInstallRelayClient: "cloud.installRelayClient",
@@ -2107,6 +2124,39 @@ const WsWorkTrackingDeleteArtifactRpc = Rpc.make(WS_METHODS.workTrackingDeleteAr
   error: workTrackingError,
 });
 
+const threadTodoError = Schema.Union([ThreadTodoError, EnvironmentAuthorizationError]);
+
+const WsThreadTodosSubscribeRpc = Rpc.make(WS_METHODS.threadTodosSubscribe, {
+  payload: ThreadTodoListInput,
+  success: ThreadTodoListResult,
+  error: threadTodoError,
+  stream: true,
+});
+
+const WsThreadTodosAddRpc = Rpc.make(WS_METHODS.threadTodosAdd, {
+  payload: ThreadTodoAddInput,
+  success: ThreadTodoMutationResult,
+  error: threadTodoError,
+});
+
+const WsThreadTodosSetStateRpc = Rpc.make(WS_METHODS.threadTodosSetState, {
+  payload: ThreadTodoSetStateInput,
+  success: ThreadTodoMutationResult,
+  error: threadTodoError,
+});
+
+const WsThreadTodosDraftTicketRpc = Rpc.make(WS_METHODS.threadTodosDraftTicket, {
+  payload: ThreadTodoDraftTicketInput,
+  success: ThreadTodoTicketDraft,
+  error: threadTodoError,
+});
+
+const WsThreadTodosCreateTicketRpc = Rpc.make(WS_METHODS.threadTodosCreateTicket, {
+  payload: ThreadTodoCreateTicketInput,
+  success: ThreadTodoCreateTicketResult,
+  error: threadTodoError,
+});
+
 const WsSubscribeAuthAccessRpc = Rpc.make(WS_METHODS.subscribeAuthAccess, {
   payload: Schema.Struct({}),
   success: AuthAccessStreamEvent,
@@ -2194,6 +2244,11 @@ export const WsRpcGroup = RpcGroup.make(
   WsScheduledTasksListWebhookDeliveriesRpc,
   WsScheduledTasksGetWebhookDeliveryRpc,
   WsWorkTrackingSubscribeBoardRpc,
+  WsThreadTodosSubscribeRpc,
+  WsThreadTodosAddRpc,
+  WsThreadTodosSetStateRpc,
+  WsThreadTodosDraftTicketRpc,
+  WsThreadTodosCreateTicketRpc,
   WsWorkTrackingListInitiativesRpc,
   WsWorkTrackingUpsertInitiativeRpc,
   WsWorkTrackingDeleteInitiativeRpc,

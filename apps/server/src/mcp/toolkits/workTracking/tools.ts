@@ -15,12 +15,15 @@ import {
   TicketStartInput,
   TicketThreadInput,
   TicketUpsertInput,
+  ThreadTodo,
+  ThreadTodoWriteRow,
 } from "@t3tools/contracts";
 import { Tool, Toolkit } from "effect/ai";
 import * as Schema from "effect/Schema";
 
 import * as McpInvocationContext from "../../McpInvocationContext.ts";
 import * as ThreadManagementService from "../../../orchestration-v2/ThreadManagementService.ts";
+import * as ThreadTodos from "../../../threadTodos/ThreadTodoService.ts";
 import * as TicketLaunch from "../../../workTracking/TicketLaunchService.ts";
 import * as WorkTracking from "../../../workTracking/WorkTrackingService.ts";
 
@@ -151,7 +154,17 @@ const ArtifactDeleteTool = Tool.make("t3_artifact_delete", {
   success: Schema.Struct({ id: Schema.String }),
 }).annotate(Tool.Destructive, true);
 
+const TodoWriteTool = Tool.make("t3_todo_write", {
+  ...shared,
+  description:
+    "Record this thread's open topics: side quests, findings, deferred scope and unanswered questions, grouped and tagged. Omit a row's `id` to create it. Not for the steps of the work you were asked to do.",
+  parameters: Schema.Struct({ todos: Schema.Array(ThreadTodoWriteRow) }),
+  success: Schema.Struct({ todos: Schema.Array(ThreadTodo) }),
+  dependencies: [...shared.dependencies, ThreadTodos.ThreadTodoService],
+}).annotate(Tool.Destructive, true);
+
 export const WorkTrackingToolkit = Toolkit.make(
+  TodoWriteTool,
   InitiativeListTool,
   InitiativeWriteTool,
   InitiativeDeleteTool,

@@ -350,6 +350,41 @@ export function buildBranchNamePrompt(input: BranchNamePromptInput) {
   return { prompt, outputSchema };
 }
 
+export interface TicketContentPromptInput {
+  todoText: string;
+  todoTags: ReadonlyArray<string>;
+  threadTitle: string;
+  projectName: string;
+  /** The discussion around the point the todo was written, not the whole thread. */
+  transcriptExcerpt: string;
+}
+
+export function buildTicketContentPrompt(input: TicketContentPromptInput) {
+  const prompt = [
+    "You turn a note taken during a coding session into a standalone issue someone can pick up cold.",
+    "Return a JSON object with keys: title, description.",
+    "Rules:",
+    "- The reader has not seen the conversation. Carry over the context they need from the excerpt.",
+    "- Title: one line, under 80 characters, naming the change rather than the discussion.",
+    "- Description: markdown. What the problem is, why it matters, and where in the code it lives.",
+    "- Use only what the excerpt supports. Do not invent file names, causes or decisions.",
+    "- Leave out next steps you cannot justify from the excerpt.",
+    "",
+    `Project: ${input.projectName}`,
+    `Thread: ${input.threadTitle}`,
+    `Note: ${input.todoText}`,
+    ...(input.todoTags.length === 0 ? [] : [`Tags: ${input.todoTags.join(", ")}`]),
+    "",
+    "Conversation around the note:",
+    limitSection(input.transcriptExcerpt, 24_000),
+  ].join("\n");
+  const outputSchema = Schema.Struct({
+    title: Schema.String,
+    description: Schema.String,
+  });
+  return { prompt, outputSchema };
+}
+
 export interface ThreadTitlePromptInput {
   linkedContext?: string | undefined;
   message: string;

@@ -74,6 +74,11 @@ export const CLIENT_GUARDED_RPC_SCOPES = {
   // Writing an Artifact writes a file into the Initiative's directory on this environment.
   [WS_METHODS.workTrackingWriteArtifact]: AuthOrchestrationOperateScope,
   [WS_METHODS.workTrackingDeleteArtifact]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosAdd]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosSetState]: AuthOrchestrationOperateScope,
+  // Drafting runs a model on this environment's providers, as a review guide does.
+  [WS_METHODS.threadTodosDraftTicket]: AuthOrchestrationOperateScope,
+  [WS_METHODS.threadTodosCreateTicket]: AuthOrchestrationOperateScope,
   [ORCHESTRATION_V2_WS_METHODS.stopWorkflow]: AuthOrchestrationOperateScope,
   // Force stop kills agent processes, as Stop on a terminal does.
   [ORCHESTRATION_V2_WS_METHODS.forceStopThread]: AuthOrchestrationOperateScope,

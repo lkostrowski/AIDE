@@ -84,6 +84,34 @@ and `Run` is a counted turn.
   transcript: a plan, a research note, a report. Survives the Thread that wrote it. Not
   code, which lives in a worktree, and not conversation, which lives in turn items.
 
+## ThreadTodo, and why it is not a Ticket
+
+A **ThreadTodo** is a thread-local note: a side quest, a finding, scope deliberately left
+out, a question that went unanswered. The agent writes them with `t3_todo_write`; the user
+can add one by hand, and either can mark one `done` or `discarded`. Nothing is ever
+deleted, and **only the user can reopen a closed row** — an agent that disagrees with a
+dismissal argues for it in its reply instead of quietly undoing the user's action.
+
+It is deliberately not a Ticket. A Ticket is shared, lives on the board, carries status and
+owns threads; a ThreadTodo is private to one conversation and costs nothing to write. One
+converts to the other, which is the point: a note earns a place on the board only when
+someone decides it has. Conversion is offered only when the thread resolves to an
+Initiative — through a Ticket that already lists the thread, or the single Initiative
+covering its Project — because the alternative is auto-creating Initiatives nobody asked
+for.
+
+Two constraints that are not visible from either side alone:
+
+- **The agent sees the list through the prompt, not through a tool.** The block is joined
+  into the user text in `ProviderTurnStartService`, beside the context handoff, side-chat
+  and restart-note text, so every provider gets it without per-adapter work. Claude's
+  `appendSystemPrompt` is frozen for the life of a query process and Codex's
+  `additionalContext` is Codex-only, so neither can carry state that changes per turn.
+- **Delivery is gated on a per-thread revision, not on a timestamp.** Two writes inside one
+  millisecond share an ISO string, so a user ticking a row immediately after an agent write
+  would never reach the agent. Compaction ignores the gate and resends the whole list,
+  because the provider has dropped the earlier copy.
+
 ## Worktree ownership
 
 This is the one place T3's model and the fork's disagree structurally.
@@ -186,7 +214,7 @@ orchestration. Not the entity.
   projects within an environment and explicitly stop there, and the MCP tools take no
   `environmentId` for the same reason. A linked environment is refused outright rather than
   silently writing into the wrong board.
-- Mobile has no board yet, so a Ticket filed on web is invisible there. The contracts and
+- Mobile has neither the board nor the thread-todo panel, so a Ticket filed on web is invisible there. The contracts and
   service are surface-agnostic; what is missing is the React Native screen.
 - The web board shows the primary environment only. With several connected environments the
   rest of the work is unreachable, which the per-environment sections in Scheduled tasks

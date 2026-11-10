@@ -127,6 +127,8 @@ import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import * as ScheduledTasks from "./scheduledTasks/ScheduledTaskService.ts";
 import * as WorkTracking from "./workTracking/WorkTrackingService.ts";
 import * as TicketLaunch from "./workTracking/TicketLaunchService.ts";
+import * as ThreadTodos from "./threadTodos/ThreadTodoService.ts";
+import * as ThreadTodoTickets from "./threadTodos/ThreadTodoTicketService.ts";
 import * as SecretRequests from "./secrets/SecretRequests.ts";
 import * as GuestShareService from "./guest/GuestShareService.ts";
 import {
@@ -1442,6 +1444,8 @@ export const layerWsRpc = (
       const scheduledTasks = yield* ScheduledTasks.ScheduledTaskService;
       const workTracking = yield* WorkTracking.WorkTrackingService;
       const ticketLaunch = yield* TicketLaunch.TicketLaunchService;
+      const threadTodos = yield* ThreadTodos.ThreadTodoService;
+      const threadTodoTickets = yield* ThreadTodoTickets.ThreadTodoTicketService;
       const secretRequests = yield* SecretRequests.SecretRequests;
       const guestShares = yield* GuestShareService.GuestShareService;
       const pullRequests = yield* PullRequestService.PullRequestService;
@@ -2399,6 +2403,23 @@ export const layerWsRpc = (
         [WS_METHODS.workTrackingDeleteArtifact]: (input) =>
           Effect.annotateCurrentSpan({ "artifact.id": input.id }).pipe(
             Effect.andThen(workTracking.deleteArtifact(input)),
+          ),
+        [WS_METHODS.threadTodosSubscribe]: (input) => threadTodos.subscribe(input.threadId),
+        [WS_METHODS.threadTodosAdd]: (input) =>
+          Effect.annotateCurrentSpan({ "thread.id": input.threadId }).pipe(
+            Effect.andThen(threadTodos.add(input)),
+          ),
+        [WS_METHODS.threadTodosSetState]: (input) =>
+          Effect.annotateCurrentSpan({ "todo.id": input.id }).pipe(
+            Effect.andThen(threadTodos.setState(input)),
+          ),
+        [WS_METHODS.threadTodosDraftTicket]: (input) =>
+          Effect.annotateCurrentSpan({ "todo.id": input.id }).pipe(
+            Effect.andThen(threadTodoTickets.draft(input)),
+          ),
+        [WS_METHODS.threadTodosCreateTicket]: (input) =>
+          Effect.annotateCurrentSpan({ "todo.id": input.id }).pipe(
+            Effect.andThen(threadTodoTickets.create(input)),
           ),
         [WS_METHODS.serverProbe]: (_input) => Effect.succeed({}),
         [WS_METHODS.serverGetConfig]: (_input) =>

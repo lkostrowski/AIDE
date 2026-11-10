@@ -1338,6 +1338,10 @@ export function createServerEnvironmentAtoms<R, E>(
       label: "environment-data:work-tracking:board:live",
       tag: WS_METHODS.workTrackingSubscribeBoard,
     }),
+    threadTodosLive: createEnvironmentRpcSubscriptionAtomFamily(runtime, {
+      label: "environment-data:thread-todos:live",
+      tag: WS_METHODS.threadTodosSubscribe,
+    }),
     // A cold transcript scan is measured in seconds, so keep the result around
     // long enough that switching windows or re-rendering does not rescan.
     usageSummary: createEnvironmentRpcQueryAtomFamily(runtime, {
@@ -1627,6 +1631,27 @@ export function createServerEnvironmentAtoms<R, E>(
     deleteArtifact: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:work-tracking:delete-artifact",
       tag: WS_METHODS.workTrackingDeleteArtifact,
+    }),
+    addThreadTodo: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:thread-todos:add",
+      tag: WS_METHODS.threadTodosAdd,
+    }),
+    setThreadTodoState: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:thread-todos:set-state",
+      tag: WS_METHODS.threadTodosSetState,
+    }),
+    // Off any shared lane: drafting runs a model, so it must not stall other edits.
+    draftThreadTodoTicket: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:thread-todos:draft-ticket",
+      tag: WS_METHODS.threadTodosDraftTicket,
+      concurrency: {
+        mode: "singleFlight",
+        key: ({ environmentId, input }) => `${environmentId}:${input.id}`,
+      },
+    }),
+    createThreadTodoTicket: createEnvironmentRpcCommand(runtime, {
+      label: "environment-data:thread-todos:create-ticket",
+      tag: WS_METHODS.threadTodosCreateTicket,
     }),
     createGuestShare: createEnvironmentRpcCommand(runtime, {
       label: "environment-data:server:guest-share:create",

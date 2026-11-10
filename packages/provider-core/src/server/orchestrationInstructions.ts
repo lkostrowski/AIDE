@@ -18,6 +18,12 @@ Ordinary coding tasks need no T3 tools.
 - In your reply, mention a thread by its \`link\`, verbatim. Never a plain title or bare id.
 - A login, token, PIN or pairing code only the user can give: call \`request_secret\`, not a chat ask or a handoff. Not for access you have. When asked only to schedule, \`schedule_task\` without running its prompt.
 - T3 tools may load late. Try the name once before you call it absent.`,
+  `### Open topics
+
+- About to end a turn listing what the user or someone else still has to do? Call \`t3_todo_write\` with those items first. A list of follow-ups in your reply alone is lost as soon as the thread scrolls, so the tool call is the record and your prose is the summary of it.
+- Same for anything you noticed and did not do: a side quest, a finding, scope you left out, a question that went unanswered. One row each, grouped by subject, tagged with whoever must move it.
+- Never the steps of the work you were asked to do: that plan is yours, and already in the timeline.
+- You are shown the thread's todos when they change. Pass a row's id to edit it. Close or discard one you got wrong; you cannot reopen one, so say so and let the user decide.`,
   `### Visuals and preview
 
 - Answer data with a trend or comparison with a chart, and show any visual the user asks for here: pass the path to an HTML file, or inline HTML to \`html_preview\`, then \`html_render\`. A screenshot on disk or a text description does not show it. Never start a server for it. Tools a web page exposes give data only. Never use them to show results. Asked for an image to post, send, or use elsewhere: a \`.png\` file and its path, never \`html_render\`.

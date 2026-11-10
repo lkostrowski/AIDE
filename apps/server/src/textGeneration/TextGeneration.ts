@@ -33,6 +33,8 @@ export type {
   ReviewGuideGenerationResult,
   ThreadTitleGenerationInput,
   ThreadTitleGenerationResult,
+  TicketContentGenerationInput,
+  TicketContentGenerationResult,
   TranscriptionPostProcessingInput,
   TranscriptionPostProcessingResult,
 } from "@t3tools/provider-core/server/textGeneration";
@@ -47,6 +49,7 @@ type TextGenerationOp =
   | "generateBranchName"
   | "generateThreadTitle"
   | "generateReviewGuide"
+  | "generateTicketContent"
   | "generateTranscriptionPostProcessing";
 
 const resolveInstance = (
@@ -150,6 +153,11 @@ export const make = Effect.gen(function* () {
     generateReviewGuide: Effect.fn("TextGeneration.generateReviewGuide")(function (input) {
       return generate("generateReviewGuide", input.modelSelection, (service, modelSelection) =>
         service.generateReviewGuide({ ...input, modelSelection }),
+      );
+    }),
+    generateTicketContent: Effect.fn("TextGeneration.generateTicketContent")(function (input) {
+      return generate("generateTicketContent", input.modelSelection, (service, modelSelection) =>
+        service.generateTicketContent({ ...input, modelSelection }),
       );
     }),
     generateTranscriptionPostProcessing: Effect.fn(
